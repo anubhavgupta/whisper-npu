@@ -1,23 +1,35 @@
 const HotkeyRecorder = require('./hotkeyRecorder');
+const OVMSManager = require('./ovmsManager');
 
-async function startHotkeyRecorder() {
+async function main() {
+  const ovmsManager = new OVMSManager();
   const recorder = new HotkeyRecorder();
 
-  // Start the global hotkey recorder
-  await recorder.start();
+  try {
+    // Start OpenVINO server first
+    await ovmsManager.start();
 
-  // Keep the process running
-  console.log('\nPress Ctrl+C to exit...');
+    // Start the global hotkey recorder
+    await recorder.start();
 
-  // Handle graceful shutdown
-  process.on('SIGINT', async () => {
-    console.log('\nShutting down...');
-    await recorder.unregister();
-    process.exit(0);
-  });
+    // Keep the process running
+    console.log('\nPress Ctrl+C to exit...');
+
+    // Handle graceful shutdown
+    process.on('SIGINT', async () => {
+      console.log('\nShutting down...');
+      await recorder.unregister();
+
+      // Stop OVMS server
+      await ovmsManager.stop();
+
+      process.exit(0);
+    });
+
+  } catch (error) {
+    console.error('Fatal error:', error.message);
+    process.exit(1);
+  }
 }
 
-startHotkeyRecorder().catch(error => {
-  console.error('Fatal error:', error);
-  process.exit(1);
-});
+main();
