@@ -211,7 +211,11 @@ class HotkeyRecorder {
     return new Promise((resolve) => {
       console.log('  Copying text to clipboard...');
       // Use PowerShell to copy text to clipboard on Windows
-      const command = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetText('${text.replace(/'/g, "\\'")}')"`;
+      const escapedText = text
+        .replace(/`/g, '``')   // escape backticks first
+        .replace(/"/g, '`"');  // escape double quotes for PowerShell
+
+      const command = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetText(\\"${escapedText}\\")"`;
       exec(command, (error) => {
         if (error) {
           console.error('✗ Failed to copy to clipboard:', error.message);
