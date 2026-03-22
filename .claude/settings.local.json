@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebSearch",
+      "Bash(DEBUG=record node:*)",
+      "Bash(export:*)",
+      "Bash(sox:*)",
+      "Bash(rec:*)",
+      "Bash(node:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npm:*)",
+      "mcp__chrome-devtools__new_page",
+      "mcp__chrome-devtools__type_text",
+      "mcp__chrome-devtools__wait_for",
+      "mcp__chrome-devtools__click",
+      "mcp__chrome-devtools__navigate_page",
+      "mcp__chrome-devtools__take_snapshot",
+      "mcp__chrome-devtools__close_page",
+      "Bash(ls -la *.wav)"
+    ]
+  }
+}

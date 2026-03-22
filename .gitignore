@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Audio files
+*.wav
+recording.wav
+to-transcribe.wav
+output.wav
+output2.wav
+fixed.wav
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment variables
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
