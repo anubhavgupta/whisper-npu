@@ -1,6 +1,7 @@
 const globalHotkey = require('global-hotkey');
 const RecordAudio = require('./recordAudio');
 const TranscribeAudio = require('./transcribeAudio');
+const { exec } = require('child_process');
 
 class HotkeyRecorder {
   constructor() {
@@ -185,15 +186,61 @@ class HotkeyRecorder {
         console.log('[Transcription Started]');
         const transcription = await this.transcriber.transcribe(result.outputFile);
         console.log('\n=== TRANSCRIPTION ===');
-        console.log(transcription.text || transcription);
+        const text = transcription.text || transcription;
+        console.log(text);
         console.log('====================\n');
         console.log('[Transcription Completed]');
+
+        // Copy to clipboard and trigger paste
+        await this.copyToClipboard(text);
+        await this.triggerPaste();
       } catch (error) {
         console.error('✗ Transcription failed:', error.message);
       }
     } else {
       console.error('✗ Failed to stop recording:', result.error);
     }
+  }
+
+  /**
+   * Copy text to clipboard
+   * @param {string} text - Text to copy
+   * @returns {Promise<void>}
+   */
+  async copyToClipboard(text) {
+    return new Promise((resolve) => {
+      console.log('  Copying text to clipboard...');
+      // Use PowerShell to copy text to clipboard on Windows
+      const command = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetText('${text.replace(/'/g, "\\'")}')"`;
+      exec(command, (error) => {
+        if (error) {
+          console.error('✗ Failed to copy to clipboard:', error.message);
+        } else {
+          console.log('✓ Text copied to clipboard');
+        }
+        resolve();
+      });
+    });
+  }
+
+  /**
+   * Trigger paste event (Ctrl+V)
+   * @returns {Promise<void>}
+   */
+  async triggerPaste() {
+    return new Promise((resolve) => {
+      console.log('  Triggering paste...');
+      // Use PowerShell to send Ctrl+V on Windows
+      const command = 'powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^(v)\')"';
+      exec(command, (error) => {
+        if (error) {
+          console.error('✗ Failed to trigger paste:', error.message);
+        } else {
+          console.log('✓ Paste triggered');
+        }
+        resolve();
+      });
+    });
   }
 
   /**
