@@ -3,18 +3,22 @@ const FormData = require('form-data');
 const axios = require('axios');
 
 class TranscribeAudio {
-  constructor(apiUrl = 'http://localhost:8000/v3/audio/translations') {
-    this.apiUrl = apiUrl;
+  constructor(configPath = 'openvino-config.json') {
+    // Load configuration from JSON file
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const restPort = config.restPort || 8000;
+    this.apiUrl = `http://localhost:${restPort}/v3/audio/translations`;
+    this.config = config;
   }
 
   /**
    * Transcribes an audio file to text
    * @param {string} filePath - Path to the audio file
-   * @param {string} model - Model to use for transcription (default: 'openai/whisper-tiny')
    * @param {string} responseFormat - Response format (default: 'verbose_json')
    * @returns {Promise<Object>} The transcription result
    */
-  async transcribe(filePath, model = 'openai/whisper-tiny', responseFormat = 'verbose_json') {
+  async transcribe(filePath, responseFormat = 'verbose_json') {
+    const model = this.config.sourceModel;
     console.log(filePath, model, responseFormat);
     try {
       // Read the audio file

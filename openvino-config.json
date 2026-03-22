@@ -1,6 +1,6 @@
 {
   "ovmsDirectoryPath": "C:\\projects\\ovms_windows_python_on_2026\\ovms",
-  "sourceModel": "openai/whisper-tiny",
+  "sourceModel": "openai/whisper-small",
   "modelRepositoryPath": "C:\\projects\\vino-models",
   "restPort": 8000,
   "task": "speech2text",
