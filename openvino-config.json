@@ -4,5 +4,7 @@
   "modelRepositoryPath": "C:\\projects\\vino-models",
   "restPort": 8000,
   "task": "speech2text",
-  "targetDevice": "NPU"
+  "targetDevice": "NPU",
+  "temperature": "0",
+  "language": "en"
 }
