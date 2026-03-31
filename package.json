@@ -2,11 +2,11 @@
   "name": "speech-to-text",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-hotkey": "node main.js",
-    "transcribe": "node index.js"
+    "start-hotkey": "node src/main.js",
+    "transcribe": "node src/index.js"
   },
   "keywords": [],
   "author": "",
