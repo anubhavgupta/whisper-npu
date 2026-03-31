@@ -75,6 +75,14 @@ Edit `openvino-config.json` to configure your OpenVINO setup:
 
 ## Usage
 
+### First Time Setup
+
+Build the project before running:
+
+```bash
+npm run build
+```
+
 ### Starting the Application
 
 ```bash
