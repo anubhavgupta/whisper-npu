@@ -1,4 +1,4 @@
-# Speech-to-Text with OpenVINO
+# Whisper NPU with OpenVINO
 
 A Node.js application that uses OpenVINO OpenVINO Model Server (OVMS) for speech recognition and transcribes audio to text using a global hotkey.
 
@@ -9,6 +9,7 @@ A Node.js application that uses OpenVINO OpenVINO Model Server (OVMS) for speech
 - 📋 **Auto-copy to clipboard** - Copies transcribed text to clipboard and triggers paste
 - ⚡ **Fast performance** - Uses OpenVINO with NPU for efficient inference
 - 🔧 **Configurable** - Easy configuration via JSON file
+- 🛠️ **TypeScript** - Fully typed codebase for better developer experience
 
 ## Requirements
 
@@ -30,7 +31,6 @@ npm install
 
 Download and install SOX from the official website:
 - Windows: https://sox.sourceforge.net/
-
 
 ### 3. Setup OVMS
 
@@ -56,7 +56,9 @@ Edit `openvino-config.json` to configure your OpenVINO setup:
   "modelRepositoryPath": "C:\\projects\\vino-models",
   "restPort": 8000,
   "task": "speech2text",
-  "targetDevice": "NPU"
+  "targetDevice": "NPU",
+  "temperature": "0",
+  "language": "en"
 }
 ```
 
@@ -68,13 +70,15 @@ Edit `openvino-config.json` to configure your OpenVINO setup:
 - `restPort` - Port on which OVMS server will run
 - `task` - Task type (usually "speech2text")
 - `targetDevice` - Target device (usually "NPU")
+- `temperature` - Sampling temperature for generation
+- `language` - Language code for transcription
 
 ## Usage
 
 ### Starting the Application
 
 ```bash
-npm run start-hotkey
+npm run start
 ```
 
 This will:
@@ -92,7 +96,7 @@ This will:
    - Stop recording
    - Convert raw audio to WAV format
    - Transcribe the audio using the OpenVINO server
-   - Pastes the text to current focused input.
+   - Copy to clipboard and paste to the focused input
 
 ### Stopping the Application
 
@@ -101,6 +105,24 @@ Press `Ctrl+C` to stop the application. This will:
 - Stop the OpenVINO server
 - Exit gracefully
 
+## Scripts
+
+- `npm run build` - Compile TypeScript to JavaScript
+- `npm run start` - Start the hotkey recorder
+- `npm run dev` - Development mode with ts-node
+
+## Project Structure
+
+```
+src/
+├── index.ts         # Main entry point (transcription CLI)
+├── main.ts          # Main entry point (hotkey recorder)
+├── recordAudio.ts   # Audio recording functionality
+├── transcribeAudio.ts  # Transcription API client
+├── ovmsManager.ts   # OpenVINO Model Server manager
+├── hotkeyRecorder.ts # Global hotkey management
+└── types.ts         # Shared TypeScript types
+```
 
 ## Troubleshooting
 
@@ -137,15 +159,25 @@ If you get an error like `sox: not found`:
 2. Make sure PowerShell is available on your system
 3. Check that you have the latest version of Windows
 
-## Scripts
-
-- `npm run start-hotkey` - Start the hotkey recorder
-
 ## Dependencies
 
 - `axios` - HTTP client for API calls
 - `clipboardy` - Clipboard operations
 - `global-hotkey` - Windows global hotkey registration
+
+## Development
+
+### Building
+
+```bash
+npm run build
+```
+
+### Development Mode
+
+```bash
+npm run dev
+```
 
 ## License
 

@@ -1,14 +1,24 @@
 {
-  "name": "speech-to-text",
+  "name": "whisper-npu",
   "version": "1.0.0",
-  "description": "",
-  "main": "src/index.js",
+  "description": "Brings speech-to-text to any app via global hotkey using Whisper on NPU",
+  "main": "dist/main.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start-hotkey": "node src/main.js",
-    "transcribe": "node src/index.js"
+    "build": "tsc",
+    "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
+    "start": "node dist/main.js",
+    "dev": "ts-node src/main.ts"
   },
-  "keywords": [],
+  "keywords": [
+    "whisper",
+    "openvino",
+    "npu",
+    "speech-to-text",
+    "voice-to-text",
+    "global-hotkey",
+    "speech-recognition"
+  ],
   "author": "",
   "license": "SEE LICENSE IN LICENSE",
   "type": "commonjs",
@@ -16,5 +26,11 @@
     "axios": "^1.13.6",
     "clipboardy": "^5.3.1",
     "global-hotkey": "^0.0.12"
+  },
+  "devDependencies": {
+    "@types/form-data": "^2.2.1",
+    "@types/node": "^25.5.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^6.0.2"
   }
 }

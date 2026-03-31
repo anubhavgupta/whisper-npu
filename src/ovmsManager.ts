@@ -1,36 +1,43 @@
-const { spawn } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+import { spawn, ChildProcess } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import { AppConfig } from './types';
 
 class OVMSManager {
-  constructor(configPath = './openvino-config.json') {
+  private configPath: string;
+  private config: AppConfig | null = null;
+  private ovmsProcess: ChildProcess | null = null;
+  private isStarted: boolean = false;
+
+  constructor(configPath: string = './openvino-config.json') {
     this.configPath = configPath;
-    this.config = null;
-    this.ovmsProcess = null;
-    this.isStarted = false;
   }
 
   /**
    * Load OpenVINO configuration
-   * @returns {Object} Configuration object
+   * @returns AppConfig - Configuration object
    */
-  loadConfig() {
+  loadConfig(): AppConfig {
     if (!fs.existsSync(this.configPath)) {
       throw new Error(`Config file not found: ${this.configPath}`);
     }
 
-    this.config = JSON.parse(fs.readFileSync(this.configPath, 'utf8'));
+    this.config = JSON.parse(fs.readFileSync(this.configPath, 'utf8')) as AppConfig;
     return this.config;
   }
 
   /**
    * Start OpenVINO server
-   * @returns {Promise<ChildProcess>} OVMS process
+   * @returns Promise<ChildProcess> - OVMS process
    */
-  async start() {
+  async start(): Promise<ChildProcess> {
     // Load config if not already loaded
     if (!this.config) {
       this.loadConfig();
+    }
+
+    if (!this.config) {
+      throw new Error('Configuration not loaded');
     }
 
     const { ovmsDirectoryPath, sourceModel, modelRepositoryPath, restPort, task, targetDevice } = this.config;
@@ -51,20 +58,21 @@ class OVMSManager {
     // Chain setup and OVMS in one command
     const command = `powershell -ExecutionPolicy Bypass -Command "Set-Location '${ovmsDirectoryPath}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`;
 
-    this.ovmsProcess = spawn('powershell', ['-Command', command], {
+    const process = spawn('powershell', ['-Command', command], {
       cwd: ovmsDirectoryPath,
       stdio: ['ignore', 'pipe', 'pipe']
     });
+    this.ovmsProcess = process;
 
-    this.ovmsProcess.stdout.on('data', (data) => {
+    process.stdout.on('data', (data: Buffer) => {
       console.log(`[OVMS stdout] ${data.toString()}`);
     });
 
-    this.ovmsProcess.stderr.on('data', (data) => {
+    process.stderr.on('data', (data: Buffer) => {
       console.log(`[OVMS stderr] ${data.toString()}`);
     });
 
-    this.ovmsProcess.on('error', (error) => {
+    process.on('error', (error: Error) => {
       throw new Error(`Failed to start OVMS: ${error.message}`);
     });
 
@@ -83,7 +91,7 @@ class OVMSManager {
         }
 
         // Check if process is still running
-        if (this.ovmsProcess.killed) {
+        if (!this.ovmsProcess || this.ovmsProcess.killed) {
           reject(new Error('OVMS process exited unexpectedly'));
           return;
         }
@@ -101,17 +109,19 @@ class OVMSManager {
       const checkIntervalId = setInterval(checkServerReady, checkInterval);
 
       // Clean up interval on resolve
-      this.ovmsProcess.on('close', () => {
-        clearInterval(checkIntervalId);
-      });
+      if (this.ovmsProcess) {
+        this.ovmsProcess.on('close', () => {
+          clearInterval(checkIntervalId);
+        });
+      }
     });
   }
 
   /**
    * Stop OpenVINO server
-   * @returns {Promise<void>}
+   * @returns Promise<void>
    */
-  async stop() {
+  async stop(): Promise<void> {
     // Kill OVMS server
     if (this.ovmsProcess && !this.ovmsProcess.killed) {
       console.log('Stopping OpenVINO server...');
@@ -123,19 +133,19 @@ class OVMSManager {
 
   /**
    * Check if server is running
-   * @returns {boolean}
+   * @returns boolean
    */
-  isRunning() {
+  isRunning(): boolean {
     return this.ovmsProcess !== null && !this.ovmsProcess.killed;
   }
 
   /**
    * Get the OVMS process
-   * @returns {ChildProcess|null}
+   * @returns ChildProcess|null
    */
-  getProcess() {
+  getProcess(): ChildProcess | null {
     return this.ovmsProcess;
   }
 }
 
-module.exports = OVMSManager;
+export default OVMSManager;

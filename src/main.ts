@@ -1,7 +1,7 @@
-const HotkeyRecorder = require('./hotkeyRecorder');
-const OVMSManager = require('./ovmsManager');
+import HotkeyRecorder from './hotkeyRecorder';
+import OVMSManager from './ovmsManager';
 
-async function main() {
+async function main(): Promise<void> {
   const ovmsManager = new OVMSManager();
   const recorder = new HotkeyRecorder();
 
@@ -27,7 +27,7 @@ async function main() {
     });
 
   } catch (error) {
-    console.error('Fatal error:', error.message);
+    console.error('Fatal error:', (error as Error).message);
     process.exit(1);
   }
 }

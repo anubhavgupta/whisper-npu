@@ -1,25 +1,24 @@
-const { spawn } = require('child_process');
+import { spawn, ChildProcess } from 'child_process';
+import { RecordingOptions, RecordingResult } from './types';
 
 class RecordAudio {
-  constructor() {
-    this.isRecording = false;
-    this.recordProcess = null;
-    this.currentOutputFile = 'recording.wav';
-    this.sampleRate = 16000;
-    this.channels = 1;
-    this.bitDepth = 16;
-    this.encoding = 'signed-integer';
-  }
+  private isRecording: boolean = false;
+  private recordProcess: ChildProcess | null = null;
+  private currentOutputFile: string = 'recording.wav';
+  private sampleRate: number = 16000;
+  private channels: number = 1;
+  private bitDepth: number = 16;
+  private encoding: string = 'signed-integer';
 
   /**
    * Start recording audio
-   * @param {Object} options - Recording options
-   * @param {string} options.outputFile - Output file path (default: 'recording.wav')
-   * @param {number} options.sampleRate - Sample rate in Hz (default: 16000)
-   * @param {number} options.channels - Number of channels (default: 1)
-   * @param {number} options.bitDepth - Bit depth (default: 16)
-   * @param {string} options.encoding - Audio encoding (default: 'signed-integer')
-   * @returns {Promise<Object>} Result object with success status and process
+   * @param options - Recording options
+   * @param options.outputFile - Output file path (default: 'recording.wav')
+   * @param options.sampleRate - Sample rate in Hz (default: 16000)
+   * @param options.channels - Number of channels (default: 1)
+   * @param options.bitDepth - Bit depth (default: 16)
+   * @param options.encoding - Audio encoding (default: 'signed-integer')
+   * @returns Promise<RecordingResult> - Result object with success status and process
    */
   async start({
     outputFile = 'recording.wav',
@@ -27,7 +26,7 @@ class RecordAudio {
     channels = 1,
     bitDepth = 16,
     encoding = 'signed-integer'
-  } = {}) {
+  }: Partial<RecordingOptions>): Promise<RecordingResult> {
     if (this.isRecording) {
       return {
         success: false,
@@ -47,9 +46,9 @@ class RecordAudio {
 
       const args = [
         '-t', 'waveaudio', 'default',
-        '-r', sampleRate,
-        '-c', channels,
-        '-b', bitDepth,
+        '-r', sampleRate.toString(),
+        '-c', channels.toString(),
+        '-b', bitDepth.toString(),
         '-e', encoding,
         outputFile
       ];
@@ -62,7 +61,7 @@ class RecordAudio {
       this.isRecording = true;
 
       // Handle process errors
-      this.recordProcess.on('error', (error) => {
+      this.recordProcess.on('error', (error: Error) => {
         this.isRecording = false;
         resolve({
           success: false,
@@ -71,7 +70,7 @@ class RecordAudio {
       });
 
       // Handle process exit
-      this.recordProcess.on('exit', (code) => {
+      this.recordProcess.on('exit', (code: number | null) => {
         this.isRecording = false;
         if (code !== 0) {
           resolve({
@@ -83,10 +82,12 @@ class RecordAudio {
 
       // Listen to stdout and stderr
       let stderr = '';
-      this.recordProcess.stderr.on('data', (data) => {
-        stderr += data.toString();
-      });
-
+      const process: ChildProcess = this.recordProcess;
+      if (process.stderr) {
+        process.stderr.on('data', (data: Buffer) => {
+          stderr += data.toString();
+        });
+      }
 
       // Resolve with success
       setTimeout(() => {
@@ -102,17 +103,25 @@ class RecordAudio {
 
   /**
    * Fix audio - convert raw audio to WAV format using SOX
-   * @param {string} outputFile - Path to the audio file to fix
-   * @returns {Promise<void>}
+   * @param outputFile - Path to the audio file to fix
+   * @returns Promise<void>
    */
-  async fixAudio(outputFile) {
+  async fixAudio(outputFile: string): Promise<void> {
     console.log(`  Converting raw audio to WAV...`);
     try {
       const convertCmd = `sox -t raw -r ${this.sampleRate} -c ${this.channels} -b ${this.bitDepth} -e ${this.encoding} ${outputFile} to-transcribe.wav`;
-      const convertProcess = spawn(convertCmd, [], { shell: true });
+      const convertProcess = spawn('sox', [
+        '-t', 'raw',
+        '-r', this.sampleRate.toString(),
+        '-c', this.channels.toString(),
+        '-b', this.bitDepth.toString(),
+        '-e', this.encoding,
+        outputFile,
+        'to-transcribe.wav'
+      ], { stdio: ['ignore', 'pipe', 'pipe'] });
 
-      await new Promise((resolveConvert, rejectConvert) => {
-        convertProcess.on('exit', (convertCode) => {
+      await new Promise<void>((resolveConvert, rejectConvert) => {
+        convertProcess.on('exit', (convertCode: number | null) => {
           if (convertCode === 0 || convertCode === null) {
             console.log(`  ✓ Conversion successful`);
             resolveConvert();
@@ -122,21 +131,21 @@ class RecordAudio {
           }
         });
 
-        convertProcess.stderr.on('data', (data) => {
+        convertProcess.stderr.on('data', (data: Buffer) => {
           console.log(`  [SOX convert stderr]: ${data.toString().trim()}`);
         });
       });
-    } catch (convertError) {
-      console.log(`  ⚠ Conversion error: ${convertError.message}`);
+    } catch (convertError: unknown) {
+      console.log(`  Conversion error: ${(convertError as Error).message}`);
       // Continue anyway - file might still work
     }
   }
 
   /**
    * Stop recording
-   * @returns {Promise<Object>} Result object with success status and file path
+   * @returns Promise<RecordingResult> - Result object with success status and file path
    */
-  async stop() {
+  async stop(): Promise<RecordingResult> {
     if (!this.isRecording || !this.recordProcess) {
       return {
         success: false,
@@ -145,47 +154,43 @@ class RecordAudio {
     }
 
     return new Promise((resolve) => {
+      const process: ChildProcess = this.recordProcess!;
+      let timeoutReached = false;
+
       // Kill the process (defaults to SIGTERM, like node-record-lpcm16)
-      this.recordProcess.kill();
+      process.kill();
 
       // Wait for process to exit
       const timeout = setTimeout(async () => {
+        timeoutReached = true;
         this.isRecording = false;
         this.recordProcess = null;
 
         // If process didn't exit, try SIGKILL as fallback
-        if (this.recordProcess && !this.recordProcess.killed) {
-          console.log(`  Trying SIGKILL as fallback...`);
-          this.recordProcess.kill('SIGKILL');
+        console.log(`  Trying SIGKILL as fallback...`);
+        process.kill('SIGKILL');
 
-          setTimeout(() => {
-            this.isRecording = false;
-            this.recordProcess = null;
-            resolve({
-              success: false,
-              error: 'Process did not terminate'
-            });
-          }, 1000);
-        } else {
-          // Fix audio - convert raw audio to WAV format
-          await this.fixAudio(this.currentOutputFile);
-
+        setTimeout(() => {
+          this.isRecording = false;
+          this.recordProcess = null;
           resolve({
-            success: true,
-            outputFile: 'to-transcribe.wav',
-            message: 'Recording stopped successfully'
+            success: false,
+            error: 'Process did not terminate'
           });
-        }
+        }, 1000);
       }, 2000); // 2 second timeout
 
-      this.recordProcess.on('exit', async (code) => {
+      process.on('exit', async (code: number | null) => {
+        if (timeoutReached) {
+          return;
+        }
         clearTimeout(timeout);
         this.isRecording = false;
         this.recordProcess = null;
 
         // Process exited successfully if code is 0 or null
         if (code === 0 || code === null) {
-          console.log(`  ✓ Recording stopped`);
+          console.log(`  Recording stopped`);
 
           // Fix audio - convert raw audio to WAV format
           await this.fixAudio(this.currentOutputFile);
@@ -196,7 +201,7 @@ class RecordAudio {
             message: 'Recording stopped successfully'
           });
         } else {
-          console.log(`  ✗ Recording exited with code ${code}`);
+          console.log(`  Recording exited with code ${code}`);
           resolve({
             success: false,
             error: `Recording stopped with exit code ${code}`
@@ -204,19 +209,21 @@ class RecordAudio {
         }
       });
 
-      this.recordProcess.stderr.on('data', (data) => {
-        console.log(`  [SOX stderr]: ${data.toString().trim()}`);
-      });
+      if (process.stderr) {
+        process.stderr.on('data', (data: Buffer) => {
+          console.log(`  [SOX stderr]: ${data.toString().trim()}`);
+        });
+      }
     });
   }
 
   /**
    * Check if currently recording
-   * @returns {boolean} True if recording
+   * @returns boolean - True if recording
    */
-  isRecordingActive() {
+  isRecordingActive(): boolean {
     return this.isRecording;
   }
 }
 
-module.exports = RecordAudio;
+export default RecordAudio;

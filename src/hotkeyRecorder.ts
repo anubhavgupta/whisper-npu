@@ -1,22 +1,31 @@
-const globalHotkey = require('global-hotkey');
-const RecordAudio = require('./recordAudio');
-const TranscribeAudio = require('./transcribeAudio');
-const { exec } = require('child_process');
+import globalHotkey from 'global-hotkey';
+import RecordAudio from './recordAudio';
+import TranscribeAudio from './transcribeAudio';
+import { exec, ChildProcess } from 'child_process';
+
+interface HotkeyEvent {
+  [key: string]: boolean | number;
+  keyCode: number;
+}
 
 class HotkeyRecorder {
+  private isRecording: boolean = false;
+  private recordAudio: RecordAudio;
+  private transcriber: TranscribeAudio;
+  private isRegistered: boolean = false;
+  private hotkey: string = 'win+/';
+  private listenerId: number | null = null;
+
   constructor() {
-    this.isRecording = false;
     this.recordAudio = new RecordAudio();
     this.transcriber = new TranscribeAudio();
-    this.isRegistered = false;
-    this.hotkey = 'win+/';
   }
 
   /**
    * Start recording with global hotkey
-   * @param {string} hotkey - The hotkey combination (default: 'win+/')
+   * @param hotkey - The hotkey combination (default: 'win+/')
    */
-  async start(hotkey = 'win+/') {
+  async start(hotkey: string = 'win+/'): Promise<void> {
     this.hotkey = hotkey;
     if (this.isRegistered) {
       console.log('Hotkey already registered');
@@ -41,28 +50,28 @@ class HotkeyRecorder {
       console.log('Press the hotkey to start/stop recording');
 
     } catch (error) {
-      console.error('Failed to register hotkey:', error.message);
+      console.error('Failed to register hotkey:', (error as Error).message);
     }
   }
 
   /**
    * Parse hotkey string to object format
-   * @param {string} hotkey - Hotkey string like 'win+/'
-   * @returns {Object} Key event object
+   * @param hotkey - Hotkey string like 'win+/'
+   * @returns HotkeyEvent - Key event object
    */
-  parseHotkey(hotkey) {
+  parseHotkey(hotkey: string): HotkeyEvent {
     const parts = hotkey.split('+');
     const modifier = parts[0]; // win, ctrl, alt
     const key = parts[1]; // /
 
-    const modifiers = {
+    const modifiers: Record<string, string> = {
       'win': 'meta',
       'ctrl': 'ctrl',
       'alt': 'alt',
       'meta': 'meta'
     };
 
-    const keyCodes = {
+    const keyCodes: Record<string, number> = {
       '/': 0xBF,  // OEM_2 - Regular slash key
       '?': 0xBF,  // Same as slash
       '@': 0x40,
@@ -78,7 +87,7 @@ class HotkeyRecorder {
       '|': 0xDC,
       ';': 0xBA,
       ':': 0xBA,
-      '\'': 0xDE,
+      "'": 0xDE,
       '"': 0xDE,
       ',': 0xBC,
       '.': 0xBE,
@@ -110,7 +119,7 @@ class HotkeyRecorder {
   /**
    * Toggle recording start/stop
    */
-  async toggleRecording() {
+  async toggleRecording(): Promise<void> {
     if (this.isRecording) {
       await this.stopRecording();
     } else {
@@ -121,7 +130,7 @@ class HotkeyRecorder {
   /**
    * Start recording
    */
-  async startRecording() {
+  async startRecording(): Promise<void> {
     if (this.isRecording) {
       console.log('Already recording');
       return;
@@ -140,17 +149,17 @@ class HotkeyRecorder {
 
     if (result.success) {
       this.isRecording = true;
-      console.log(`✓ Recording process started successfully`);
-      console.log(`✓ Output file: ${result.outputFile}`);
+      console.log(` Recording process started successfully`);
+      console.log(` Output file: ${result.outputFile}`);
     } else {
-      console.error('✗ Failed to start recording:', result.error);
+      console.error(' Failed to start recording:', result.error);
     }
   }
 
   /**
    * Stop recording and transcribe
    */
-  async stopRecording() {
+  async stopRecording(): Promise<void> {
     if (!this.isRecording) {
       console.log('Not recording');
       return;
@@ -163,8 +172,8 @@ class HotkeyRecorder {
 
     if (result.success) {
       this.isRecording = false;
-      console.log(`✓ Recording stopped`);
-      console.log(`✓ Output file: ${result.outputFile}`);
+      console.log(` Recording stopped`);
+      console.log(` Output file: ${result.outputFile}`);
 
       // Wait for file to be fully written
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -179,14 +188,16 @@ class HotkeyRecorder {
       if (fileSize === 0) {
         throw new Error('Output file is empty');
       }
-      console.log(`✓ File verified: ${fileSize} bytes`);
+      console.log(` File verified: ${fileSize} bytes`);
 
       // Start transcription
       try {
         console.log('[Transcription Started]');
-        const transcription = await this.transcriber.transcribe(result.outputFile);
+        const transcription = await this.transcriber.transcribe(result.outputFile!);
         console.log('\n=== TRANSCRIPTION ===');
-        const text = transcription.text || transcription;
+        const text = typeof transcription.text === 'string' ? transcription.text :
+                      typeof transcription === 'string' ? transcription :
+                      JSON.stringify(transcription);
         console.log(text);
         console.log('====================\n');
         console.log('[Transcription Completed]');
@@ -195,19 +206,19 @@ class HotkeyRecorder {
         await this.copyToClipboard(text);
         await this.triggerPaste();
       } catch (error) {
-        console.error('✗ Transcription failed:', error.message);
+        console.error(' Transcription failed:', (error as Error).message);
       }
     } else {
-      console.error('✗ Failed to stop recording:', result.error);
+      console.error(' Failed to stop recording:', result.error);
     }
   }
 
   /**
    * Copy text to clipboard
-   * @param {string} text - Text to copy
-   * @returns {Promise<void>}
+   * @param text - Text to copy
+   * @returns Promise<void>
    */
-  async copyToClipboard(text) {
+  async copyToClipboard(text: string): Promise<void> {
     return new Promise((resolve) => {
       console.log('  Copying text to clipboard...');
       // Use PowerShell to copy text to clipboard on Windows
@@ -216,11 +227,11 @@ class HotkeyRecorder {
         .replace(/"/g, '`"');  // escape double quotes for PowerShell
 
       const command = `powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.Clipboard]::SetText(\\"${escapedText}\\")"`;
-      exec(command, (error) => {
+      exec(command, (error: Error | null) => {
         if (error) {
-          console.error('✗ Failed to copy to clipboard:', error.message);
+          console.error(' Failed to copy to clipboard:', error.message);
         } else {
-          console.log('✓ Text copied to clipboard');
+          console.log(' Text copied to clipboard');
         }
         resolve();
       });
@@ -229,18 +240,18 @@ class HotkeyRecorder {
 
   /**
    * Trigger paste event (Ctrl+V)
-   * @returns {Promise<void>}
+   * @returns Promise<void>
    */
-  async triggerPaste() {
+  async triggerPaste(): Promise<void> {
     return new Promise((resolve) => {
       console.log('  Triggering paste...');
       // Use PowerShell to send Ctrl+V on Windows
       const command = 'powershell -Command "Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SendKeys]::SendWait(\'^(v)\')"';
-      exec(command, (error) => {
+      exec(command, (error: Error | null) => {
         if (error) {
-          console.error('✗ Failed to trigger paste:', error.message);
+          console.error(' Failed to trigger paste:', error.message);
         } else {
-          console.log('✓ Paste triggered');
+          console.log(' Paste triggered');
         }
         resolve();
       });
@@ -249,16 +260,16 @@ class HotkeyRecorder {
 
   /**
    * Check if currently recording
-   * @returns {boolean}
+   * @returns boolean - True if recording
    */
-  isRecordingActive() {
+  isRecordingActive(): boolean {
     return this.isRecording;
   }
 
   /**
    * Unregister the global hotkey
    */
-  async unregister() {
+  async unregister(): Promise<void> {
     if (this.isRegistered) {
       if (this.listenerId) {
         globalHotkey.removeListener(this.listenerId);
@@ -271,4 +282,4 @@ class HotkeyRecorder {
   }
 }
 
-module.exports = HotkeyRecorder;
+export default HotkeyRecorder;
