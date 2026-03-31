@@ -29,7 +29,6 @@ class TranscribeAudio {
    * @returns {Promise<Object>} The transcription result
    */
   async transcribe(filePath: string, responseFormat: string = 'verbose_json'): Promise<Record<string, unknown>> {
-    console.log("anubhav", filePath);
     const model = this.config.sourceModel;
     console.log(filePath, model, responseFormat);
     try {
