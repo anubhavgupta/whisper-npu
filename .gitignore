@@ -34,3 +34,5 @@ Thumbs.db
 
 dist/
 downloaded-whisper-npu-models/
+pack/
+whisper-npu.exe

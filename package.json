@@ -10,7 +10,8 @@
     "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
     "start": "node dist/main.js",
     "dev": "ts-node src/main.ts",
-    "exe": "pkg ."
+    "exe": "pkg .",
+    "pack": "node scripts/pack.js"
   },
   "keywords": [
     "whisper",
@@ -33,6 +34,7 @@
     "@types/node": "^25.5.0",
     "@types/node-fetch": "^2.6.13",
     "@yao-pkg/pkg": "^6.14.2",
+    "archiver": "^7.0.0",
     "ts-node": "^10.9.2",
     "typescript": "^6.0.2"
   },
