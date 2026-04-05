@@ -1,6 +1,7 @@
 // Configuration interface for openvino-config.json
 export interface AppConfig {
   ovmsDirectoryPath: string;
+  soxDirectoryPath: string;
   sourceModel: string;
   modelRepositoryPath: string;
   restPort: number;

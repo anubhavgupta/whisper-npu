@@ -1,5 +1,7 @@
 import { spawn, ChildProcess } from 'child_process';
 import { RecordingOptions, RecordingResult } from './types';
+import * as fs from 'fs';
+import * as path from 'path';
 
 class RecordAudio {
   private isRecording: boolean = false;
@@ -9,6 +11,7 @@ class RecordAudio {
   private channels: number = 1;
   private bitDepth: number = 16;
   private encoding: string = 'signed-integer';
+  private configPath: string = './openvino-config.json';
 
   /**
    * Start recording audio
@@ -41,8 +44,21 @@ class RecordAudio {
       this.bitDepth = bitDepth;
       this.encoding = encoding;
 
+      // Load config to get sox path
+      let soxExecutable = 'sox';
+      try {
+        if (fs.existsSync(this.configPath)) {
+          const config = JSON.parse(fs.readFileSync(this.configPath, 'utf8')) as any;
+          if (config.soxDirectoryPath) {
+            soxExecutable = path.resolve(config.soxDirectoryPath, 'sox.exe');
+          }
+        }
+      } catch (e) {
+        console.error('Error loading config for sox path, falling back to global sox');
+      }
+
       // Build the SOX command
-      const cmd = 'sox';
+      const cmd = soxExecutable;
 
       const args = [
         '-t', 'waveaudio', 'default',
@@ -109,8 +125,15 @@ class RecordAudio {
   async fixAudio(outputFile: string): Promise<void> {
     console.log(`  Converting raw audio to WAV...`);
     try {
-      const convertCmd = `sox -t raw -r ${this.sampleRate} -c ${this.channels} -b ${this.bitDepth} -e ${this.encoding} ${outputFile} to-transcribe.wav`;
-      const convertProcess = spawn('sox', [
+      let soxExecutable = 'sox';
+      if (fs.existsSync(this.configPath)) {
+        const config = JSON.parse(fs.readFileSync(this.configPath, 'utf8')) as any;
+        if (config.soxDirectoryPath) {
+          soxExecutable = path.resolve(config.soxDirectoryPath, 'sox.exe');
+        }
+      }
+
+      const convertProcess = spawn(soxExecutable, [
         '-t', 'raw',
         '-r', this.sampleRate.toString(),
         '-c', this.channels.toString(),

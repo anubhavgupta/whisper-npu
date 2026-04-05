@@ -1,7 +1,8 @@
 {
-  "ovmsDirectoryPath": "C:\\projects\\ovms_windows_python_on_2026\\ovms",
-  "sourceModel": "openai/whisper-small",
-  "modelRepositoryPath": "C:\\projects\\vino-models",
+  "ovmsDirectoryPath": "./external/ovms",
+  "soxDirectoryPath": "./external/sox/bin",
+  "sourceModel": "anubhav200/openai-whisper-tiny-openvino-int4",
+  "modelRepositoryPath": "./downloaded-whisper-npu-models",
   "restPort": 8000,
   "task": "speech2text",
   "targetDevice": "NPU",

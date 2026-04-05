@@ -33,3 +33,4 @@ Thumbs.db
 *.temp
 
 dist/
+downloaded-whisper-npu-models/

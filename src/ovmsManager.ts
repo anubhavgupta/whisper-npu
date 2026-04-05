@@ -43,23 +43,24 @@ class OVMSManager {
     const { ovmsDirectoryPath, sourceModel, modelRepositoryPath, restPort, task, targetDevice } = this.config;
 
     // Build the OVMS command
-    const ovmsPath = path.join(ovmsDirectoryPath, 'ovms.exe');
+    const ovmsDirectoryPathAbs = path.resolve(ovmsDirectoryPath);
+    const ovmsPath = path.join(ovmsDirectoryPathAbs, 'ovms.exe');
     const args = [
       '--source_model', sourceModel,
-      '--model_repository_path', modelRepositoryPath,
+      '--model_repository_path', path.resolve(modelRepositoryPath),
       '--rest_port', restPort.toString(),
       '--task', task,
       '--target_device', targetDevice
     ];
 
     console.log('Starting OpenVINO server...');
-    console.log(`Command: powershell -Command "Set-Location '${ovmsDirectoryPath}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`);
+    console.log(`Command: powershell -Command "Set-Location '${ovmsDirectoryPathAbs}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`);
 
     // Chain setup and OVMS in one command
-    const command = `powershell -ExecutionPolicy Bypass -Command "Set-Location '${ovmsDirectoryPath}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`;
+    const command = `powershell -ExecutionPolicy Bypass -Command "Set-Location '${ovmsDirectoryPathAbs}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`;
 
     const process = spawn('powershell', ['-Command', command], {
-      cwd: ovmsDirectoryPath,
+      cwd: ovmsDirectoryPathAbs,
       stdio: ['ignore', 'pipe', 'pipe']
     });
     this.ovmsProcess = process;
