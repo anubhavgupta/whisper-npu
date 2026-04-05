@@ -5,7 +5,6 @@
   "main": "dist/main.js",
   "bin": "dist/main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
     "clean": "node scripts/clean.js",
     "start": "node dist/main.js",
