@@ -15,29 +15,6 @@ Brings speech-to-text to any app at cursor via global hotkey.
 2. Speak something 
 3. Pressing the same keys again to stop capturing your audio
 4. The app **puts the converted/transcribed text to the current focused input.**
- 
-
-## Manual Build and Installation
-
-## Requirements
-
-- **Node.js** (v24 or higher)
-- **Windows** (for Windows Forms clipboard integration)
-- **Machine with Intel NPU**
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Generate Executable
-
-```bash
-npm run release
-```
-This will build and generate a `./pack/whisper-npu.zip` file, extract it and run `whisper-npu.exe` to use the application.
-
 
 ## Configuration
 
@@ -57,9 +34,33 @@ Edit `config.json` to configure your setup:
 }
 ```
 # Supported Models for NPU:
+Following models are support to run on NPU, I will add more models soon. Change the value of `sourceModel` in config file to one of the following:
+
 - `anubhav200/openai-whisper-tiny-openvino-int4`
 - `anubhav200/openai-whisper-small-openvino-int4`
 - `anubhav200/openai-whisper-large-v3-turbo-openvino-int4` (takes very long time to start)
+
+
+## Manual Build from source
+
+## Requirements
+
+- **Node.js** (v24 or higher)
+- **Windows** (for Windows Forms clipboard integration)
+- **Machine with Intel NPU**
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Generate Executable
+
+```bash
+npm run release
+```
+This will build and generate a `./pack/whisper-npu.zip` file, extract it and run `whisper-npu.exe` to use the application.
 
 
 ## Development
