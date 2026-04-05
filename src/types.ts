@@ -1,4 +1,4 @@
-// Configuration interface for openvino-config.json
+// Configuration interface for config.json
 export interface AppConfig {
   ovmsDirectoryPath: string;
   soxDirectoryPath: string;

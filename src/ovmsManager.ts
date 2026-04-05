@@ -9,7 +9,7 @@ class OVMSManager {
   private ovmsProcess: ChildProcess | null = null;
   private isStarted: boolean = false;
 
-  constructor(configPath: string = './openvino-config.json') {
+  constructor(configPath: string = './config.json') {
     this.configPath = configPath;
   }
 

@@ -14,7 +14,7 @@ class TranscribeAudio {
   private apiUrl: string;
   private config: Config;
 
-  constructor(configPath: string = 'openvino-config.json') {
+  constructor(configPath: string = 'config.json') {
     // Load configuration from JSON file
     const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     const restPort = configData.restPort || 8000;

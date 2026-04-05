@@ -11,7 +11,7 @@ class RecordAudio {
   private channels: number = 1;
   private bitDepth: number = 16;
   private encoding: string = 'signed-integer';
-  private configPath: string = './openvino-config.json';
+  private configPath: string = './config.json';
 
   /**
    * Start recording audio
