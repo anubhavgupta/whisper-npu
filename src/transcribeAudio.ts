@@ -1,6 +1,5 @@
 import * as fs from 'fs';
-import FormData from 'form-data';
-import axios, { AxiosResponse } from 'axios';
+import fetch, { FormData, File } from "node-fetch";
 import { AppConfig } from './types';
 
 interface Config {
@@ -38,29 +37,27 @@ class TranscribeAudio {
       // Create form data
       const formData = new FormData();
       formData.append('model', model);
-      formData.append('file', fileBuffer, filePath);
+      formData.append('file', new File([fileBuffer], filePath, { type: 'audio/wav' }));
       formData.append('response_format', responseFormat);
-      formData.append('temperature', this.config.temperature ?? "0");
-      formData.append('language', this.config.language ?? "en");
+      formData.append('temperature', this.config.temperature ?? '0');
+      formData.append('language', this.config.language ?? 'en');
 
-      // Send POST request
-      const response: AxiosResponse = await axios.post(this.apiUrl, formData, {
-        headers: formData.getHeaders()
+      // Send POST request using node-fetch
+      const response = await fetch(this.apiUrl, {
+        method: 'POST',
+        body: formData
       });
 
-      return response.data;
-    } catch (error: unknown) {
-      if (error && typeof error === 'object' && 'response' in error) {
-        const err = error as { response?: { status: number; data: unknown }; request?: unknown; message: string };
-        if (err.response) {
-          throw new Error(`API Error: ${err.response.status} - ${JSON.stringify(err.response.data)}`);
-        } else if (err.request) {
-          throw new Error(`Network Error: Could not connect to ${this.apiUrl}`);
-        } else {
-          throw new Error(`Error: ${err.message}`);
-        }
+      if (!response.ok) {
+        throw new Error(`API Error: ${response.status} - ${await response.text()}`);
       }
-      throw error;
+
+      return await response.json() as Record<string, string>;
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error(`Error: ${String(error)}`);
     }
   }
 }
