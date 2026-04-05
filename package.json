@@ -7,11 +7,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "clean": "node -e \"const fs=require('fs');fs.rmSync('dist',{recursive:true,force:true})\"",
+    "clean": "node scripts/clean.js",
     "start": "node dist/main.js",
     "dev": "ts-node src/main.ts",
     "exe": "pkg .",
-    "pack": "node scripts/pack.js"
+    "pack": "node scripts/pack.js",
+    "release": "npm run clean && npm run build && npm run exe && npm run pack"
   },
   "keywords": [
     "whisper",
