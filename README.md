@@ -82,7 +82,7 @@ npm run dev
 
 ## Troubleshooting
 
-1. Make sure you have installed the latest Intel's NPU drivers: https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html
+1. Make sure you have installed the latest Intel's NPU drivers by following the guide here: https://www.intel.com/content/www/us/en/support/articles/000099083/processors/intel-core-ultra-processors.html
 
 ## License
 
