@@ -79,7 +79,7 @@ npm run dev
 
 ## License
 
-ISC
+MPL 2.0
 
 ## Contributing
 

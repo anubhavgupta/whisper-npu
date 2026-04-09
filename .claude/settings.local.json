@@ -20,7 +20,9 @@
       "mcp__chrome-devtools__close_page",
       "Bash(ls -la *.wav)",
       "Bash(mkdir src:*)",
-      "Bash(mv index.js main.js recordAudio.js transcribeAudio.js hotkeyRecorder.js ovmsManager.js src/)"
+      "Bash(mv index.js main.js recordAudio.js transcribeAudio.js hotkeyRecorder.js ovmsManager.js src/)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

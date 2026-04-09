@@ -23,7 +23,7 @@
     "speech-recognition"
   ],
   "author": "",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MPL-2.0",
   "type": "commonjs",
   "dependencies": {
     "clipboardy": "^5.3.1",
