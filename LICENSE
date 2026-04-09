@@ -1,53 +1,137 @@
-SPEECH-TO-TEXT LICENSE
-======================
+Mozilla Public License Version 2.0
+==================================
 
-This software ("the Software") is provided under the following license terms:
+1. Definitions
+--------------
 
-PERSONAL USE LICENSE (FREE)
-----------------------------
-You are granted a free, irrevocable, non-exclusive license to use the Software for
-personal, non-commercial purposes. This includes using the Software in personal
-projects, learning, or experimental use. No payment or license fee is required.
+1.1. "Contributor"
+    means each individual or legal entity that creates, contributes to
+    the creation of, or owns Covered Software.
 
-PROFESSIONAL/COMMERCIAL LICENSE (PAID)
----------------------------------------
-For all professional and commercial use cases, you must obtain a paid license.
-Professional use includes:
-- Using the Software in commercial products or services
-- Using the Software for paid consulting or services
-- Using the Software as part of a product sold to third parties
-- Using the Software in any for-profit organization
-- Using the Software for any purpose where you receive compensation (directly or indirectly)
+1.2. "Contributor Version"
+    means the combination of the Contributions of others (if any) used
+    by a Contributor and that particular Contributor's Contribution.
 
-To obtain a commercial license, please contact the copyright holder for pricing.
+1.3. "Contribution"
+    means Covered Software of a particular Contributor.
 
-PERMISSIONS (BOTH LICENSES)
+1.4. "Covered Software"
+    means Source Code Form to which the initial Contributor has attached
+    the terms of the Mozilla Public License, as well as thousands of
+    binary or object code forms of that Source Code, and any Covered
+    Software that is derived from that Source Code.
+
+1.5. "Source Code" means the preferred form of the Covered Software
+    for making modifications to it, including all documentation files
+    associated with it and data files, in the form in which it is
+    distributed.
+
+1.6. "Object Code" means the Covered Software in any other form.
+
+1.7. "Distribution" means the act of distributing the Covered Software
+    to the public in any form.
+
+1.8. "Distribute" means to distribute the Covered Software to the
+    public in any form.
+
+2. License Rights and Obligations
+---------------------------------
+
+2.1. Conditions of Distribution
+    You may Distribute Covered Software in Source Code Form or Object
+    Code Form, provided that You comply with the conditions of this
+    License.
+
+2.2. Distributing Source Code
+    If You Distribute Covered Software in Source Code Form, You must
+    make available the Source Code to the Covered Software, including
+    any modifications You have made.
+
+2.3. Distributing Object Code
+    If You Distribute Covered Software in Object Code Form, You must
+    make available the Source Code to the Covered Software, including
+    any modifications You have made.
+
+2.4. Distributing Covered Software
+    You may Distribute Covered Software in Source Code Form or Object
+    Code Form, provided that You comply with the conditions of this
+    License.
+
+3. Distributing Source Code
 ---------------------------
-Both licenses grant you the following rights:
-- Use the Software in any jurisdiction
-- Modify, distribute, and sublicense the Software
-- Create derivative works
-- The Software is provided "as is", without warranty of any kind
 
-REQUIREMENTS (BOTH LICENSES)
-------------------------------
-- You must include the original license text and copyright notice with any distribution
-- You cannot remove any copyright notices from the Software
+3.1. Distribution of Source Code
+    If You Distribute Covered Software in Source Code Form, You must
+    make available the Source Code to the Covered Software, including
+    any modifications You have made.
 
-PATENTS
--------
-The copyright holder grants you a world-wide, royalty-free, non-exclusive license
-under its patent claims, to make, make available, have made, import, and/or otherwise
-transfer the Software.
+3.2. Availability of Source Code
+    If You Distribute Covered Software in Source Code Form, You must
+    make available the Source Code to the Covered Software, including
+    any modifications You have made.
 
-COPYRIGHT
----------
+4. Intellectual Property Rights
+-------------------------------
+
+4.1. Copyright
+    Covered Software is Copyright (c) 2026 Anubhav Gupta
+
+4.2. Trademarks
+    This License does not grant permission to use the trade names,
+    trademarks, service marks, or product names of the Contributor,
+    except as required for the distribution of the Covered Software.
+
+5. Disclaimer of Warranty
+-------------------------
+
+5.1. Disclaimer
+    Covered Software is provided on an "AS IS" basis, without warranty
+    of any kind, either express or implied, including, without
+    limitation, warranties of merchantability, fitness for a particular
+    purpose, non-infringement, or title.
+
+6. Limitation of Liability
+--------------------------
+
+6.1. Limitation of Liability
+    Under no circumstances and under no legal theory, whether tort
+    (including negligence), contract, or otherwise, shall the
+    Contributor be liable to You for any direct, indirect, special,
+    incidental, or consequential damages of any character including,
+    without limitation, damages for lost profits, loss of goodwill,
+    work stoppage, computer failure or malfunction, or any and all
+    other commercial damages or losses, even if such party shall have
+    been informed of the possibility of such damages.
+
+7. Accepting Warranty or Additional Liability
+---------------------------------------------
+
+7.1. Accepting Warranty or Additional Liability
+    While redistributing Covered Software as provided for in this
+    License, You may choose to offer, and charge a fee for, acceptance
+    of support, warranty, indemnity, or other liability obligations
+    and/or rights consistent with this License. However, in accepting
+    such obligations, You may act only on Your own behalf and on Your
+    sole responsibility, not on behalf of any other Contributor, and
+    only if You agree to indemnify, defend, and hold each Contributor
+    harmless for any liability incurred by, or claims asserted against
+    such Contributor by reason of your accepting any such warranty or
+    additional liability.
+
+8. Additional Terms
+-------------------
+
+8.1. Additional Terms
+    You may choose to offer, and to charge a fee for, warranty,
+    support, indemnity or liability obligations to one or more
+    recipients of Covered Software. Such fees may be charged for
+    services or for the use of the Covered Software.
+
+END OF LICENSE TERMS
+====================
+
 Copyright (c) 2026 Anubhav Gupta
 
-CONTACT FOR COMMERCIAL LICENSES
----------------------------------
-For commercial license inquiries, please contact:
-Anubhav Gupta
-- Email: anubhav200@gmail.com
-
-For personal use, no additional action is required.
+This Source Code Form is subject to the terms of the Mozilla Public
+License, v. 2.0. If a copy of the MPL was not distributed with this
+file, You can obtain one at https://mozilla.org/MPL/2.0/
