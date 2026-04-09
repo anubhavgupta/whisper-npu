@@ -41,7 +41,6 @@ class TranscribeAudio {
       formData.append('response_format', responseFormat);
       formData.append('temperature', this.config.temperature ?? '0');
       formData.append('language', this.config.language ?? 'en');
-
       // Send POST request using node-fetch
       const response = await fetch(this.apiUrl, {
         method: 'POST',

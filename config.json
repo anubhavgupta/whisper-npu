@@ -1,7 +1,7 @@
 {
   "ovmsDirectoryPath": "./external/ovms",
   "soxDirectoryPath": "./external/sox/bin",
-  "sourceModel": "anubhav200/openai-whisper-tiny-openvino-int4",
+  "sourceModel": "anubhav200/openai-whisper-small-openvino-int4",
   "modelRepositoryPath": "./downloaded-whisper-npu-models",
   "restPort": 8000,
   "task": "speech2text",
