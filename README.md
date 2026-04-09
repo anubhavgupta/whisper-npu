@@ -6,7 +6,7 @@ Brings speech-to-text to any app at cursor via global hotkey.
 - Keeps your GPU and CPU free by using Intel's NPU for running Speech to text conversion.
 
 # How to install
-1. Download the latest release from here: https://github.com/anubhavgupta/whisper-npu/releases/download/v1/whisper-npu.zip
+1. Download the latest release from here: https://github.com/anubhavgupta/whisper-npu/releases/download/V1.0.1/whisper-npu.zip
 2. Extract the zip
 3. Start the whisper-npu.exe. (this auto downloads and uses the whisper-small model for you, model can be changed later)
 
