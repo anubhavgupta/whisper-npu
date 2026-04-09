@@ -16,6 +16,9 @@ Brings speech-to-text to any app at cursor via global hotkey.
 3. Pressing the same keys again to stop capturing your audio
 4. The app **puts the converted/transcribed text to the current focused input.**
 
+
+**Please check Troubleshooting section in case if you face any issue**
+
 ## Configuration
 
 Edit `config.json` to configure your setup:
@@ -76,6 +79,10 @@ npm run build
 ```bash
 npm run dev
 ```
+
+## Troubleshooting
+
+1. Make sure you have installed the latest Intel's NPU drivers: https://www.intel.com/content/www/us/en/download/794734/intel-npu-driver-windows.html
 
 ## License
 
