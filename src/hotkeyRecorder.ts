@@ -15,6 +15,7 @@ class HotkeyRecorder {
   private isRegistered: boolean = false;
   private hotkey: string = 'win+/';
   private listenerId: number | null = null;
+  private releaseListenerId: number | null = null;
 
   constructor() {
     this.recordAudio = new RecordAudio();
@@ -39,15 +40,21 @@ class HotkeyRecorder {
       // Start listening for key events
       globalHotkey.startListening();
 
-      // Add listener for the hotkey combination
+      // Add listener for the hotkey combination (keydown)
       this.listenerId = globalHotkey.addListener(keyEvent, () => {
-        console.log('Hotkey pressed! Toggling recording...');
-        this.toggleRecording();
+        console.log('Hotkey pressed! Starting recording...');
+        this.startRecording();
       });
+
+      // Add listener for key release (keyup)
+      this.releaseListenerId = globalHotkey.addListener(keyEvent, () => {
+        console.log('Hotkey released! Stopping recording...');
+        this.stopRecording();
+      }, true);
 
       this.isRegistered = true;
       console.log(`Global hotkey registered: ${hotkey}`);
-      console.log('Press the hotkey to start/stop recording');
+      console.log('Hold the hotkey to record, release to stop');
 
     } catch (error) {
       console.error('Failed to register hotkey:', (error as Error).message);
@@ -114,17 +121,6 @@ class HotkeyRecorder {
       [modifierKey]: true,
       keyCode: keyCode
     };
-  }
-
-  /**
-   * Toggle recording start/stop
-   */
-  async toggleRecording(): Promise<void> {
-    if (this.isRecording) {
-      await this.stopRecording();
-    } else {
-      await this.startRecording();
-    }
   }
 
   /**
@@ -274,9 +270,13 @@ class HotkeyRecorder {
       if (this.listenerId) {
         globalHotkey.removeListener(this.listenerId);
       }
+      if (this.releaseListenerId) {
+        globalHotkey.removeListener(this.releaseListenerId);
+      }
       globalHotkey.stopListening();
       this.isRegistered = false;
       this.listenerId = null;
+      this.releaseListenerId = null;
       console.log('Hotkey unregistered');
     }
   }
