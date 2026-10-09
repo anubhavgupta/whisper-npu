@@ -16,7 +16,7 @@ class TranscribeAudio {
   constructor(configPath: string = 'config.json') {
     // Load configuration from JSON file
     const configData = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    const restPort = configData.restPort || 8000;
+    const restPort = configData.restPort ?? 19812;
     this.apiUrl = `http://localhost:${restPort}/v3/audio/translations`;
     this.config = configData;
   }
@@ -27,7 +27,7 @@ class TranscribeAudio {
    * @param responseFormat - Response format (default: 'verbose_json')
    * @returns {Promise<Object>} The transcription result
    */
-  async transcribe(filePath: string, responseFormat: string = 'verbose_json'): Promise<Record<string, unknown>> {
+  async transcribe(filePath: string, responseFormat: string = 'verbose_json', signal?: AbortSignal): Promise<Record<string, unknown>> {
     const model = this.config.sourceModel;
     console.log(filePath, model, responseFormat);
     try {
@@ -44,7 +44,8 @@ class TranscribeAudio {
       // Send POST request using node-fetch
       const response = await fetch(this.apiUrl, {
         method: 'POST',
-        body: formData
+        body: formData,
+        signal
       });
 
       if (!response.ok) {

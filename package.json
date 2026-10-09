@@ -9,9 +9,14 @@
     "clean": "node scripts/clean.js",
     "start": "node dist/main.js",
     "dev": "ts-node src/main.ts",
-    "exe": "pkg .",
+    "exe": "npm run exe:engine && npm run build:tray",
     "pack": "node scripts/pack.js",
-    "release": "npm run clean && npm run build && npm run exe && npm run pack"
+    "release": "npm run clean && npm run build && npm run exe && npm run pack",
+    "test": "npm run build && node --test tests/*.test.cjs",
+    "test:windows": "powershell.exe -NoProfile -NonInteractive -STA -ExecutionPolicy Bypass -File tests/windows-insertion.ps1",
+    "exe:engine": "pkg . --output whisper-npu-engine.exe --no-bytecode --public-packages \"*\" --public",
+    "build:tray": "node scripts/build-tray.js",
+    "test:tray": "dotnet run --project tests/tray/TrayTests.csproj --configuration Release"
   },
   "keywords": [
     "whisper",
@@ -26,9 +31,8 @@
   "license": "MPL-2.0",
   "type": "commonjs",
   "dependencies": {
-    "clipboardy": "^5.3.1",
-    "global-hotkey": "^0.0.12",
-    "node-fetch": "3.3.2"
+    "node-fetch": "3.3.2",
+    "uiohook-napi": "1.5.5"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
@@ -43,11 +47,10 @@
       "dist/main.js"
     ],
     "targets": [
-      "node24-win"
+      "node24-win-x64"
     ],
     "assets": [
-      "node_modules/**",
-      "external/**"
+      "node_modules/uiohook-napi/prebuilds/win32-x64/*.node"
     ]
   }
 }

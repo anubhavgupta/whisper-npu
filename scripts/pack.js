@@ -15,6 +15,11 @@ async function pack() {
   const exePath = path.join(__dirname, '..', 'whisper-npu.exe');
   const externalDir = path.join(__dirname, '..', 'external');
   const configPath = path.join(__dirname, '..', 'config.json');
+  for (const file of ['windows/insert-text.ps1', 'windows/TextInput.cs', 'whisper-npu-engine.exe', 'whisper-npu.exe.config']) {
+    if (!fs.existsSync(path.join(__dirname, '..', file))) {
+      throw new Error(`Required Windows helper is missing: ${file}`);
+    }
+  }
 
   if (!fs.existsSync(exePath)) {
     console.error('Error: whisper-npu.exe not found. Run "npm run exe" first.');
@@ -41,6 +46,8 @@ async function pack() {
       console.log(`Size: ${(archive.pointer() / 1024 / 1024).toFixed(2)} MB`);
       resolve();
     });
+    output.on('error', reject);
+    archive.on('warning', reject);
 
     archive.on('error', (err) => {
       reject(err);
@@ -52,6 +59,11 @@ async function pack() {
     archive.file(exePath, { name: 'whisper-npu.exe' });
     archive.directory(externalDir, 'external');
     archive.file(configPath, { name: 'config.json' });
+    for (const file of ['windows/insert-text.ps1', 'windows/TextInput.cs', 'whisper-npu-engine.exe', 'whisper-npu.exe.config']) {
+      archive.file(path.join(__dirname, '..', file), { name: file });
+    }
+    archive.file(path.join(__dirname, '..', 'README.md'), { name: 'README.md' });
+    archive.file(path.join(__dirname, '..', 'LICENSE'), { name: 'LICENSE' });
 
     archive.finalize();
   });

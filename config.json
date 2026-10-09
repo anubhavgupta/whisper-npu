@@ -3,9 +3,12 @@
   "soxDirectoryPath": "./external/sox/bin",
   "sourceModel": "anubhav200/openai-whisper-small-openvino-int4",
   "modelRepositoryPath": "./downloaded-whisper-npu-models",
-  "restPort": 8000,
+  "restPort": 19812,
   "task": "speech2text",
   "targetDevice": "NPU",
   "temperature": "0",
-  "language": "en"
+  "language": "en",
+  "hotkey": "win+/",
+  "pasteMethod": "auto",
+  "clipboardRestoreDelayMs": 500
 }

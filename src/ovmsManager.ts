@@ -4,149 +4,72 @@ import * as path from 'path';
 import { AppConfig } from './types';
 
 class OVMSManager {
-  private configPath: string;
   private config: AppConfig | null = null;
   private ovmsProcess: ChildProcess | null = null;
-  private isStarted: boolean = false;
+  private stopping = false;
 
-  constructor(configPath: string = './config.json') {
-    this.configPath = configPath;
-  }
+  constructor(private configPath = './config.json', private onFailure: (error: Error) => void = console.error) {}
 
-  /**
-   * Load OpenVINO configuration
-   * @returns AppConfig - Configuration object
-   */
   loadConfig(): AppConfig {
-    if (!fs.existsSync(this.configPath)) {
-      throw new Error(`Config file not found: ${this.configPath}`);
-    }
-
+    if (!fs.existsSync(this.configPath)) throw new Error(`Config file not found: ${this.configPath}`);
     this.config = JSON.parse(fs.readFileSync(this.configPath, 'utf8')) as AppConfig;
     return this.config;
   }
 
-  /**
-   * Start OpenVINO server
-   * @returns Promise<ChildProcess> - OVMS process
-   */
   async start(): Promise<ChildProcess> {
-    // Load config if not already loaded
-    if (!this.config) {
-      this.loadConfig();
-    }
-
-    if (!this.config) {
-      throw new Error('Configuration not loaded');
-    }
-
-    const { ovmsDirectoryPath, sourceModel, modelRepositoryPath, restPort, task, targetDevice } = this.config;
-
-    // Build the OVMS command
-    const ovmsDirectoryPathAbs = path.resolve(ovmsDirectoryPath);
-    const ovmsPath = path.join(ovmsDirectoryPathAbs, 'ovms.exe');
+    const config = this.config ?? this.loadConfig();
+    const directory = path.resolve(config.ovmsDirectoryPath);
+    const quote = (value: string) => "'" + value.replace(/'/g, "''") + "'";
     const args = [
-      '--source_model', sourceModel,
-      '--model_repository_path', path.resolve(modelRepositoryPath),
-      '--rest_port', restPort.toString(),
-      '--task', task,
-      '--target_device', targetDevice
+      '--source_model', config.sourceModel, '--model_repository_path', path.resolve(config.modelRepositoryPath),
+      '--rest_port', (config.restPort ?? 19812).toString(), '--task', config.task, '--target_device', config.targetDevice
     ];
-
+    const command = "$ErrorActionPreference = 'Stop'; . " + quote(path.join(directory, 'setupvars.ps1')) +
+      '; & ' + quote(path.join(directory, 'ovms.exe')) + ' ' + args.map(quote).join(' ') + '; exit $LASTEXITCODE';
     console.log('Starting OpenVINO server...');
-    console.log(`Command: powershell -Command "Set-Location '${ovmsDirectoryPathAbs}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`);
-
-    // Chain setup and OVMS in one command
-    const command = `powershell -ExecutionPolicy Bypass -Command "Set-Location '${ovmsDirectoryPathAbs}'; .\\setupvars.ps1; .\\${path.basename(ovmsPath)} ${args.join(' ')}"`;
-
-    const process = spawn('powershell', ['-Command', command], {
-      cwd: ovmsDirectoryPathAbs,
-      stdio: ['ignore', 'pipe', 'pipe']
+    this.stopping = false;
+    // The bundled setup script may retain Windows' downloaded-file marker.
+    // Apply the policy only to this child process, not the user's machine.
+    const child = spawn('powershell.exe', ['-NoLogo', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', command], {
+      cwd: directory, windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']
     });
-    this.ovmsProcess = process;
-
-    process.stdout.on('data', (data: Buffer) => {
-      console.log(`[OVMS stdout] ${data.toString()}`);
+    this.ovmsProcess = child;
+    child.stdout?.on('data', data => console.log(`[OVMS stdout] ${data.toString()}`));
+    child.stderr?.on('data', data => console.error(`[OVMS stderr] ${data.toString()}`));
+    await new Promise<void>((resolve, reject) => {
+      child.once('spawn', resolve);
+      child.once('error', reject);
     });
-
-    process.stderr.on('data', (data: Buffer) => {
-      console.log(`[OVMS stderr] ${data.toString()}`);
+    child.on('error', error => { if (!this.stopping) this.onFailure(error); });
+    child.once('exit', (code, signal) => {
+      if (!this.stopping) this.onFailure(new Error(`OpenVINO exited (code ${code}, signal ${signal})`));
     });
-
-    process.on('error', (error: Error) => {
-      throw new Error(`Failed to start OVMS: ${error.message}`);
-    });
-
-    // Wait for server to be ready
-    return new Promise((resolve, reject) => {
-      const maxWaitTime = 60000; // 1 minute timeout
-      const checkInterval = 2000; // Check every 2 seconds
-      const startTime = Date.now();
-      let resolved = false;
-
-      const checkServerReady = () => {
-        const elapsed = Date.now() - startTime;
-        if (elapsed >= maxWaitTime) {
-          reject(new Error('OVMS server did not start within 1 minute'));
-          return;
-        }
-
-        // Check if process is still running
-        if (!this.ovmsProcess || this.ovmsProcess.killed) {
-          reject(new Error('OVMS process exited unexpectedly'));
-          return;
-        }
-
-        // If process is running, assume it's ready (only resolve once)
-        if (!resolved) {
-          resolved = true;
-          console.log('OVMS server started successfully');
-          resolve(this.ovmsProcess);
-        }
-      };
-
-      // Check immediately, then retry
-      checkServerReady();
-      const checkIntervalId = setInterval(checkServerReady, checkInterval);
-
-      // Clean up interval on resolve
-      if (this.ovmsProcess) {
-        this.ovmsProcess.on('close', () => {
-          clearInterval(checkIntervalId);
-        });
-      }
-    });
+    console.log('OpenVINO process started; model loading may take a while.');
+    return child;
   }
 
-  /**
-   * Stop OpenVINO server
-   * @returns Promise<void>
-   */
   async stop(): Promise<void> {
-    // Kill OVMS server
-    if (this.ovmsProcess && !this.ovmsProcess.killed) {
-      console.log('Stopping OpenVINO server...');
-      this.ovmsProcess.kill('SIGTERM');
-    }
-
+    this.stopping = true;
+    const child = this.ovmsProcess;
     this.ovmsProcess = null;
+    if (!child?.pid || child.exitCode !== null || child.signalCode !== null) return;
+    console.log('Stopping OpenVINO server...');
+    if (process.platform === 'win32') {
+      // PowerShell owns the actual OVMS process. Kill its tree, not just the shell.
+      await new Promise<void>((resolve, reject) => {
+        const killer = spawn('taskkill.exe', ['/PID', String(child.pid), '/T', '/F'], { windowsHide: true, stdio: 'ignore' });
+        const timer = setTimeout(() => { killer.kill(); reject(new Error('Server cleanup timed out')); }, 5000);
+        killer.once('error', error => { clearTimeout(timer); reject(error); });
+        killer.once('close', code => {
+          clearTimeout(timer);
+          if (code === 0 || child.exitCode !== null || child.signalCode !== null) resolve();
+          else reject(new Error(`Server cleanup failed (taskkill code ${code})`));
+        });
+      });
+    } else child.kill('SIGTERM');
   }
 
-  /**
-   * Check if server is running
-   * @returns boolean
-   */
-  isRunning(): boolean {
-    return this.ovmsProcess !== null && !this.ovmsProcess.killed;
-  }
-
-  /**
-   * Get the OVMS process
-   * @returns ChildProcess|null
-   */
-  getProcess(): ChildProcess | null {
-    return this.ovmsProcess;
-  }
+  isRunning(): boolean { return !!this.ovmsProcess && this.ovmsProcess.exitCode === null && this.ovmsProcess.signalCode === null; }
+  getProcess(): ChildProcess | null { return this.ovmsProcess; }
 }
-
 export default OVMSManager;

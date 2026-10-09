@@ -71,49 +71,38 @@ class RecordAudio {
 
       // Execute using spawn
       this.recordProcess = spawn(cmd, args, {
-        stdio: ['ignore', 'pipe', 'pipe']
+        windowsHide: true, stdio: ['ignore', 'pipe', 'pipe']
       });
 
       this.isRecording = true;
 
-      // Handle process errors
-      this.recordProcess.on('error', (error: Error) => {
+      const process = this.recordProcess;
+      let settled = false;
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const finish = (result: RecordingResult) => {
+        if (settled) return;
+        settled = true;
+        if (timer) clearTimeout(timer);
+        resolve(result);
+      };
+      process.once('error', (error: Error) => {
         this.isRecording = false;
-        resolve({
-          success: false,
-          error: error.message
-        });
+        this.recordProcess = null;
+        finish({ success: false, error: error.message });
       });
-
-      // Handle process exit
-      this.recordProcess.on('exit', (code: number | null) => {
+      process.once('exit', (code: number | null) => {
         this.isRecording = false;
-        if (code !== 0) {
-          resolve({
-            success: false,
-            error: `Recording process exited with code ${code}`
-          });
-        }
+        finish({ success: false, error: `Recorder exited before it was ready (code ${code})` });
       });
-
-      // Listen to stdout and stderr
-      let stderr = '';
-      const process: ChildProcess = this.recordProcess;
-      if (process.stderr) {
-        process.stderr.on('data', (data: Buffer) => {
-          stderr += data.toString();
-        });
-      }
-
-      // Resolve with success
-      setTimeout(() => {
-        this.currentOutputFile = outputFile;
-        resolve({
-          success: true,
-          outputFile,
-          message: 'Recording started'
-        });
-      }, 500); // Small delay to ensure process is ready
+      // Drain pipes so recording cannot block on a full output buffer.
+      process.stdout?.resume();
+      process.stderr?.resume();
+      process.once('spawn', () => {
+        timer = setTimeout(() => {
+          this.currentOutputFile = outputFile;
+          finish({ success: true, outputFile, message: 'Recording started' });
+        }, 500);
+      });
     });
   }
 
@@ -141,9 +130,15 @@ class RecordAudio {
         '-e', this.encoding,
         outputFile,
         'to-transcribe.wav'
-      ], { stdio: ['ignore', 'pipe', 'pipe'] });
+      ], { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'] });
 
       await new Promise<void>((resolveConvert, rejectConvert) => {
+        const timeout = setTimeout(() => {
+          convertProcess.kill();
+          rejectConvert(new Error('Audio conversion timed out'));
+        }, 10000);
+        convertProcess.once('close', () => clearTimeout(timeout));
+        convertProcess.once('error', rejectConvert);
         convertProcess.on('exit', (convertCode: number | null) => {
           if (convertCode === 0 || convertCode === null) {
             console.log(`  ✓ Conversion successful`);
@@ -160,7 +155,7 @@ class RecordAudio {
       });
     } catch (convertError: unknown) {
       console.log(`  Conversion error: ${(convertError as Error).message}`);
-      // Continue anyway - file might still work
+      throw convertError;
     }
   }
 
@@ -169,7 +164,7 @@ class RecordAudio {
    * @returns Promise<RecordingResult> - Result object with success status and file path
    */
   async stop(): Promise<RecordingResult> {
-    if (!this.isRecording || !this.recordProcess) {
+    if (!this.recordProcess || this.recordProcess.exitCode !== null || this.recordProcess.signalCode !== null) {
       return {
         success: false,
         error: 'Not recording or no active recording process'
@@ -179,9 +174,6 @@ class RecordAudio {
     return new Promise((resolve) => {
       const process: ChildProcess = this.recordProcess!;
       let timeoutReached = false;
-
-      // Kill the process (defaults to SIGTERM, like node-record-lpcm16)
-      process.kill();
 
       // Wait for process to exit
       const timeout = setTimeout(async () => {
@@ -216,7 +208,12 @@ class RecordAudio {
           console.log(`  Recording stopped`);
 
           // Fix audio - convert raw audio to WAV format
-          await this.fixAudio(this.currentOutputFile);
+          try {
+            await this.fixAudio(this.currentOutputFile);
+          } catch (error) {
+            resolve({ success: false, error: (error as Error).message });
+            return;
+          }
 
           resolve({
             success: true,
@@ -231,6 +228,9 @@ class RecordAudio {
           });
         }
       });
+
+      // Register exit handlers before terminating the recorder.
+      process.kill();
 
       if (process.stderr) {
         process.stderr.on('data', (data: Buffer) => {

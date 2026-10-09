@@ -36,3 +36,10 @@ dist/
 downloaded-whisper-npu-models/
 pack/
 whisper-npu.exe
+# Windows tray build outputs
+whisper-npu-engine.exe
+whisper-npu.exe.config
+windows/TrayHost/bin/
+windows/TrayHost/obj/
+tests/tray/bin/
+tests/tray/obj/

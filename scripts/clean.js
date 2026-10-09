@@ -7,7 +7,9 @@ const dirsToClean = [
 ];
 
 const filesToClean = [
-  path.join(__dirname, '..', 'whisper-npu.exe')
+  path.join(__dirname, '..', 'whisper-npu.exe'),
+  path.join(__dirname, '..', 'whisper-npu.exe.config'),
+  path.join(__dirname, '..', 'whisper-npu-engine.exe')
 ];
 
 dirsToClean.forEach(dir => {

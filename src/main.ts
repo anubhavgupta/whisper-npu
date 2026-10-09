@@ -1,35 +1,38 @@
 import HotkeyRecorder from './hotkeyRecorder';
 import OVMSManager from './ovmsManager';
+import { waitForTray } from './engineControl';
 
 async function main(): Promise<void> {
-  const ovmsManager = new OVMSManager();
-  const recorder = new HotkeyRecorder();
-
+  const trayMode = process.argv.includes('--tray-engine');
+  const ovmsManager = new OVMSManager('./config.json', error => {
+    console.error('OpenVINO server failed:', error.message);
+    void shutdown(1);
+  });
+  let recorder: HotkeyRecorder | undefined;
+  let shuttingDown = false;
+  const shutdown = async (exitCode: number) => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    try { await recorder?.unregister(); }
+    catch (error) { console.error('Recorder cleanup failed:', error); exitCode = 1; }
+    try { await ovmsManager.stop(); }
+    catch (error) { console.error('Server cleanup failed:', error); exitCode = 1; }
+    process.exit(exitCode);
+  };
+  process.on('SIGINT', () => { void shutdown(0); });
+  process.on('SIGTERM', () => { void shutdown(0); });
   try {
-    // Start OpenVINO server first
+    if (trayMode) await waitForTray(process.stdin, () => { void shutdown(0); });
+    if (shuttingDown) return;
+    recorder = new HotkeyRecorder();
     await ovmsManager.start();
-
-    // Start the global hotkey recorder
+    if (shuttingDown) return;
     await recorder.start();
-
-    // Keep the process running
-    console.log('\nPress Ctrl+C to exit...');
-
-    // Handle graceful shutdown
-    process.on('SIGINT', async () => {
-      console.log('\nShutting down...');
-      await recorder.unregister();
-
-      // Stop OVMS server
-      await ovmsManager.stop();
-
-      process.exit(0);
-    });
-
+    console.log(trayMode ? '\nDictation ready. Use the tray menu to quit.' : '\nPress Ctrl+C to exit...');
   } catch (error) {
     console.error('Fatal error:', (error as Error).message);
-    process.exit(1);
+    await shutdown(1);
   }
 }
 
-main();
+void main();

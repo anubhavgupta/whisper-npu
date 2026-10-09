@@ -9,6 +9,9 @@ export interface AppConfig {
   targetDevice: string;
   temperature?: string;
   language?: string;
+  hotkey?: string;
+  pasteMethod?: import('./textInsertion').PasteMethod;
+  clipboardRestoreDelayMs?: number;
 }
 
 // Recording options interface
